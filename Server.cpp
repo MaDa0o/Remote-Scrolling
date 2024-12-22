@@ -6,6 +6,8 @@
 #include <arpa/inet.h>		//defind uint32_t and uint16_t types
 #include <string>
 #include <string.h>			//for memset because it is c function
+#include <cstdlib>			// For system()
+#include <cstring>			// For strcmp()
 // Steps to setup Server
 // 	-> Create TCP socket
 // 	-> Bind socket to server address
@@ -13,6 +15,17 @@
 // 	-> Accept the request from client 
 //  -> receive and display messages
 //  -> close socket
+
+void scroll(const std::string& direction) {
+    if (direction == "up") {
+        system("xdotool click 4");  // Simulate mouse scroll up
+    } else if (direction == "down") {
+        system("xdotool click 5");  // Simulate mouse scroll down
+    } else {
+        std::cerr << "Invalid direction. Use 'up' or 'down'." << std::endl;
+    }
+}
+
 
 int main(int argc, char* argv[]){
 
@@ -71,23 +84,49 @@ int main(int argc, char* argv[]){
 	}
 
 	//Receive and display messages
-	char buff[4096];
+	// char buff[4096];
 	while(true){
 		//clear buffer
-		memset(buff, 0 , 4096);
+		// memset(buff, 0 , 4096);
 		//wait for a message
-		int bytesRecv = recv(clientSocket, buff, 4096, 0);
-		if(bytesRecv == -1){
+		//first length of message received
+		int messageLength = 0;
+        int bytesReceived = recv(clientSocket, &messageLength, sizeof(messageLength), 0);	
+
+        std::cout<<messageLength - 3376<<"\n";
+        messageLength = messageLength - 3376;
+
+		if(bytesReceived == -1){
 			std::cerr<<"issue in receiving"<<std::endl;
 			break;
 		}
 
-		if(bytesRecv == 0){
+		if(bytesReceived == 0){
 			std::cout<<"Client Disconnected."<<std::endl;
 			break;
 		}
+		char* buffer = new char[messageLength + 1];
+		int totalBytesReceived = 0;
+
+		while (totalBytesReceived < messageLength) {
+            int chunk = recv(clientSocket, buffer + totalBytesReceived, messageLength - totalBytesReceived, 0);
+            std::cout<<chunk<<"\n";
+            if (chunk <= 0) {
+                delete[] buffer;
+                return 5;  // Connection closed or error.
+            }
+            totalBytesReceived += chunk;
+        }
+        buffer[messageLength] = '\0';  // Null-terminate the string
+
 		//display message
-		std::cout<< "Received: "<< std::string(buff, 0, bytesRecv)<<std::endl;
+        std::string message = std::string(buffer);
+        if(message == "exit"){
+        	break;
+        }
+
+        scroll(message);
+
 	}
 
 	//close socket
