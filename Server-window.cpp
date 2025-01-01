@@ -13,6 +13,15 @@
 
 #pragma comment(lib, "ws2_32.lib") // Link Winsock library
 
+void simulateScroll(int direction)
+{
+    INPUT input = {0};
+    input.type = INPUT_MOUSE;
+    input.mi.dwFlags = MOUSEEVENTF_WHEEL;
+    input.mi.mouseData = direction; // Positive for up, negative for down
+    SendInput(1, &input, sizeof(INPUT));
+}
+
 int main()
 {
     // Initialize Winsock
@@ -132,6 +141,15 @@ int main()
         {
             std::cout << "Client requested to terminate the connection." << std::endl;
             break;
+        }
+
+        if (message == "up")
+        {
+            simulateScroll(120); // Scroll up
+        }
+        else if (message == "down")
+        {
+            simulateScroll(-120); // Scroll down
         }
     }
 
