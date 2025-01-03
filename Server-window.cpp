@@ -20,6 +20,7 @@ void simulateScroll(int direction)
     input.mi.dwFlags = MOUSEEVENTF_WHEEL;
     input.mi.mouseData = direction; // Positive for up, negative for down
     SendInput(1, &input, sizeof(INPUT));
+    std::cout << "Scrolled " << direction << "\n";
 }
 
 int main()
@@ -91,28 +92,9 @@ int main()
     // Receive and display messages
     while (true)
     {
-        int messageLength = 0;
+        int messageLength = 4;
 
-        // Receive the length of the message
-        int bytesReceived = recv(clientSocket, (char *)&messageLength, sizeof(messageLength), 0);
-
-        if (bytesReceived <= 0)
-        {
-            std::cout << "Client disconnected or error receiving message length." << std::endl;
-            break;
-        }
-
-        // Adjust the received length (if necessary for your protocol)
-        messageLength -= 3376;
-        if (messageLength <= 0 || messageLength > 4096)
-        {
-            std::cerr << "Invalid message length received: " << messageLength << std::endl;
-            continue;
-        }
-
-        std::cout << "message length: " << messageLength << std::endl;
-
-        // Receive the actual message
+        // Receive the message
         char *buffer = new char[messageLength + 1];
         ZeroMemory(buffer, messageLength + 1);
 
@@ -143,7 +125,7 @@ int main()
             break;
         }
 
-        if (message == "up")
+        if (message == "upup")
         {
             simulateScroll(120); // Scroll up
         }
